@@ -1,7 +1,13 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'gcr.io/$PROJECT_ID/comfyui-wan-i2v:latest', '--build-arg', 'HF_TOKEN=${_HF_TOKEN}', '.']
+  env:
+  - 'MODEL_BUCKET=${_MODEL_BUCKET}'
 images:
 - 'gcr.io/$PROJECT_ID/comfyui-wan-i2v:latest'
 options:
-  logging: CLOUD_LOGGING_ONLY 
+  logging: CLOUD_LOGGING_ONLY
+substitutions:
+  _MODEL_BUCKET: 'wan-ai-models'  # Bu değeri kendi bucket isminizle değiştirin
+  _HF_TOKEN: ''  # Opsiyonel, artık gerekli değil
+
