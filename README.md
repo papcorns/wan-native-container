@@ -67,8 +67,5 @@ This project includes a `cloudbuild.yaml` file to automatically build the Docker
 
 You can trigger a manual build by running the following command from the project's root directory:
 
-```bash
-gcloud builds submit .
-```
 
-This command sends the code in the current directory to Cloud Build, executes the steps in `cloudbuild.yaml`, and pushes the resulting image, tagged as `gcr.io/YOUR_PROJECT_ID/comfyui-wan-i2v:latest`, to the Container Registry. 
+Alternatively, you can set up the HF_TOKEN in Google Cloud Build trigger settings as a substitution variable for automated builds. 
