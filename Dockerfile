@@ -21,20 +21,30 @@ RUN pip install -r requirements.txt
 
 # Download models
 # Create directories for models
-RUN mkdir -p models/clip && \
-    mkdir -p models/unets && \
+RUN mkdir -p models/diffusion_models && \
     mkdir -p models/vae && \
-    mkdir -p models/clip_vision
+    mkdir -p models/clip_vision && \
+    mkdir -p models/text_encoders && \
+    mkdir -p models/loras
 
 # Download the models
-RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -O models/clip/umt5_xxl_fp8_e4m3fn_scaled.safetensors https://huggingface.co/i-lol-i/wan-i2v/resolve/main/umt5_xxl_fp8_e4m3fn_scaled.safetensors
-RUN echo "Downloaded umt5_xxl_fp8_e4m3fn_scaled.safetensors"
-RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -O models/unets/wan2.1_i2v_480p_14B_fp16.safetensors https://huggingface.co/i-lol-i/wan-i2v/resolve/main/wan2.1_i2v_480p_14B_fp16.safetensors
-RUN echo "Downloaded wan2.1_i2v_480p_14B_fp16.safetensors"
-RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -O models/vae/wan_2.1_vae.safetensors https://huggingface.co/i-lol-i/wan-i2v/resolve/main/wan_2.1_vae.safetensors
-RUN echo "Downloaded wan_2.1_vae.safetensors"
-RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -O models/clip_vision/clip_vision_h.safetensors https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors
+RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -c https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan2_1-I2V-14B-480P_fp8_e4m3fn.safetensors -P ./models/diffusion_models/
+RUN echo "Downloaded Wan2_1-I2V-14B-480P_fp8_e4m3fn.safetensors"
+
+RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -c https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan2_1_VAE_bf16.safetensors -P ./models/vae/
+RUN echo "Downloaded Wan2_1_VAE_bf16.safetensors"
+
+RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -c https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors -P ./models/clip_vision/
 RUN echo "Downloaded clip_vision_h.safetensors"
+
+RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -c https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/umt5-xxl-enc-bf16.safetensors -P ./models/text_encoders/
+RUN echo "Downloaded umt5-xxl-enc-bf16.safetensors"
+
+RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -c https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/umt5-xxl-enc-fp8_e4m3fn.safetensors -P ./models/text_encoders/
+RUN echo "Downloaded umt5-xxl-enc-fp8_e4m3fn.safetensors"
+
+RUN wget --header="Authorization: Bearer ${HF_TOKEN}" -c https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan21_T2V_14B_lightx2v_cfg_step_distill_lora_rank32.safetensors -P ./models/loras/
+RUN echo "Downloaded Wan21_T2V_14B_lightx2v_cfg_step_distill_lora_rank32.safetensors"
 
 # Copy the script into the ComfyUI directory
 COPY NativeWanScript.py /app/ComfyUI/
