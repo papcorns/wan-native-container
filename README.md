@@ -53,3 +53,22 @@ docker run --gpus all \
 -   `--output-prefix your_video_name`: Sets the prefix for the output video file. The final output will be something like `your_video_name_00001_.webp`.
 
 After the container finishes execution, your generated video will be available in the `output` directory on your local machine. 
+
+## Build with Google Cloud Build
+
+This project includes a `cloudbuild.yaml` file to automatically build the Docker image and push it to Google Container Registry (GCR) using Google Cloud Build.
+
+### Prerequisites
+
+- You must have the [Cloud Build API enabled](https://console.cloud.google.com/flows/enableapi?apiid=cloudbuild.googleapis.com) in your Google Cloud project.
+- The `gcloud` command-line tool must be [installed and configured](https://cloud.google.com/sdk/docs/install).
+
+### Triggering a Build
+
+You can trigger a manual build by running the following command from the project's root directory:
+
+```bash
+gcloud builds submit .
+```
+
+This command sends the code in the current directory to Cloud Build, executes the steps in `cloudbuild.yaml`, and pushes the resulting image, tagged as `gcr.io/YOUR_PROJECT_ID/comfyui-wan-i2v:latest`, to the Container Registry. 
