@@ -1,8 +1,11 @@
 # Use a PyTorch base image with CUDA support
 FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 
+ENV APP_HOME /app
+ENV PYTHONUNBUFFERED TRUE
+
 # Set the working directory
-WORKDIR /app
+WORKDIR $APP_HOME
 
 # Install git, wget, curl, and other dependencies
 RUN apt-get update && apt-get install -y git wget curl && rm -rf /var/lib/apt/lists/*
