@@ -1,17 +1,26 @@
 steps:
+# Step 1: Download all models from GCS to a local directory ('./temp_models_gcs')
+# This step runs with Cloud Build's permissions.
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: ['-m', 'cp', '-r', 'gs://wan-ai-models/*', './temp_models_gcs/']
+  id: 'Download Models'
+
+# Step 2: Build the Docker image, now that models are available locally.
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
     '-t', 'gcr.io/$PROJECT_ID/comfyui-wan-i2v:latest',
-    '--build-arg', 'MODEL_BUCKET=$_MODEL_BUCKET',
     '.'
   ]
   id: 'Build'
+  waitFor: ['Download Models'] # Wait for Step 1 to complete
 
+# Step 3: Push the image to Google Container Registry
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/comfyui-wan-i2v:latest']
   id: 'Push'
 
+# Step 4: Deploy to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: 'gcloud'
   args: [
@@ -31,6 +40,5 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 substitutions:
-  _MODEL_BUCKET: 'wan-ai-models'
   _OUTPUT_BUCKET: 'wan-ai-outputs'
 

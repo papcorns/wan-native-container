@@ -31,16 +31,10 @@ RUN mkdir -p models/diffusion_models && \
     mkdir -p models/text_encoders && \
     mkdir -p models/loras
 
-# --- DEBUGGING STEPS ---
-RUN echo "--- STARTING DEBUG ---"
-RUN echo "MODEL_BUCKET is set to: $MODEL_BUCKET"
-RUN gcloud auth list
-RUN gsutil ls gs://$MODEL_BUCKET/
-RUN echo "--- ENDING DEBUG ---"
-
-# Copy model download script and execute it during build
-COPY download_models.sh /app/ComfyUI/
-RUN chmod +x download_models.sh && ./download_models.sh
+# --- Model Loading ---
+# Copy the pre-downloaded models from the build context into the models directory.
+# The models are downloaded in a previous Cloud Build step into the './temp_models_gcs' directory.
+COPY temp_models_gcs/ /app/ComfyUI/models/
 
 # Copy the application source code
 WORKDIR /app
