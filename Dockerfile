@@ -21,4 +21,4 @@ COPY NativeWanScript.py /app/NativeWanScript.py
 EXPOSE 8080
 
 # Set the entrypoint to run the Functions Framework server
-ENTRYPOINT ["functions-framework", "--target=wan_video_endpoint", "--host=0.0.0.0", "--port=8080"] 
+ENTRYPOINT ["functions-framework", "--target=wan_video_endpoint", "--source=/app/main.py", "--host=0.0.0.0", "--port=8080"] 
