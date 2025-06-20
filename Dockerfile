@@ -31,6 +31,13 @@ RUN mkdir -p models/diffusion_models && \
     mkdir -p models/text_encoders && \
     mkdir -p models/loras
 
+# --- DEBUGGING STEPS ---
+RUN echo "--- STARTING DEBUG ---"
+RUN echo "MODEL_BUCKET is set to: $MODEL_BUCKET"
+RUN gcloud auth list
+RUN gsutil ls gs://$MODEL_BUCKET/
+RUN echo "--- ENDING DEBUG ---"
+
 # Copy model download script and execute it during build
 COPY download_models.sh /app/ComfyUI/
 RUN chmod +x download_models.sh && ./download_models.sh
