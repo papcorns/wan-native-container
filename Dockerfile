@@ -25,4 +25,4 @@ RUN echo "pwd is $(pwd)"
 RUN echo "ls is: \n$(ls)"
 
 # Set the entrypoint to run the Functions Framework server
-CMD exec functions-framework --target=wan_video_endpoint
+ENTRYPOINT functions-framework --target=wan_video_endpoint --port=8080 --host=127.0.0.1
