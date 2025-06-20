@@ -119,7 +119,7 @@ def main():
 
         unetloader = NODE_CLASS_MAPPINGS["UNETLoader"]()
         unetloader_37 = unetloader.load_unet(
-            unet_name="wan2.1_i2v_480p_14B_fp16.safetensors", weight_dtype="default"
+            unet_name="wan2.1_i2v_720p_14B_fp16.safetensors", weight_dtype="default"
         )
 
         vaeloader = NODE_CLASS_MAPPINGS["VAELoader"]()
