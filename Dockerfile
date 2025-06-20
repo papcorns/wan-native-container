@@ -13,12 +13,19 @@ COPY comfy-ui-requirements.txt /app/comfy-ui-requirements.txt
 RUN pip install -r requirements.txt
 RUN pip install -r comfy-ui-requirements.txt 
 
+# Copy test.py
+COPY test.py /app/test.py
+
 # Copy the application source code
 COPY main.py /app/main.py
 COPY NativeWanScript.py /app/NativeWanScript.py
+
+# Verify files are copied correctly
+RUN ls -la /app/
+RUN cat /app/main.py | head -5
 
 # Expose port 8080
 EXPOSE 8080
 
 # Set the entrypoint to run the Functions Framework server
-ENTRYPOINT ["functions-framework", "--target=wan_video_endpoint", "--source=/app/main.py", "--host=0.0.0.0", "--port=8080"] 
+ENTRYPOINT ["functions-framework", "--target=wan_native_handler", "--source=/app/main.py", "--host=0.0.0.0", "--port=8080"] 
