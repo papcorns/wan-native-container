@@ -13,9 +13,9 @@ RUN apt-get update && apt-get install -y git wget curl && rm -rf /var/lib/apt/li
 RUN curl https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/root/google-cloud-sdk/bin
 
-# Accept HF_TOKEN as build argument (kept for compatibility)
-ARG HF_TOKEN
-ENV HF_TOKEN=${HF_TOKEN}
+# Accept MODEL_BUCKET as a build argument
+ARG MODEL_BUCKET
+ENV MODEL_BUCKET=${MODEL_BUCKET}
 
 # Clone ComfyUI repository
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git
