@@ -66,7 +66,7 @@ def wan_video_function(request):
 
         output_prefix = "generated_video"
         command = [
-            "python", "NativeWanScript.py",
+            "python", "/app/NativeWanScript.py",
             "--input-image", temp_image_path,
             "--output-prefix", output_prefix
         ]
@@ -104,12 +104,18 @@ def wan_video_function(request):
 
     except subprocess.CalledProcessError as e:
         logging.error(f"Error running script: {e.stderr}")
+        if 'temp_image_path' in locals() and os.path.exists(temp_image_path):
+            os.remove(temp_image_path)
         return jsonify({"error": f"Error during video generation: {e.stderr}"}), 500
     except requests.exceptions.RequestException as e:
         logging.error(f"Failed to download input image: {e}")
+        if 'temp_image_path' in locals() and os.path.exists(temp_image_path):
+            os.remove(temp_image_path)
         return jsonify({"error": f"Failed to download input image: {e}"}), 400
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}", exc_info=True)
+        if 'temp_image_path' in locals() and os.path.exists(temp_image_path):
+            os.remove(temp_image_path)
         return jsonify({"error": "An internal server error occurred."}), 500
 
 @functions_framework.http
