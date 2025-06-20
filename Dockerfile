@@ -17,7 +17,11 @@ RUN pip install -r comfy-ui-requirements.txt
 COPY main.py /app/main.py
 COPY NativeWanScript.py /app/NativeWanScript.py
 
+# Expose port 8080
+EXPOSE 8080
+
+# Set environment variable for port
+ENV PORT=8080
+
 # Set the entrypoint to run the Functions Framework server
-# The server will automatically start and listen for HTTP requests on port 8080
-# The target is the function name in main.py
 ENTRYPOINT ["functions-framework", "--target=wan_video_endpoint", "--host=0.0.0.0", "--port=8080"] 
