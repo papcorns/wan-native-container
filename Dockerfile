@@ -17,7 +17,7 @@ RUN pip install -r comfy-ui-requirements.txt
 RUN pip install functions-framework
 
 # Copy the application source code
-COPY main.py NativeWanScript.py ./
+COPY main.py ./
 
 # Print debug information
 RUN echo "----------ls -la CALISIYOR"
