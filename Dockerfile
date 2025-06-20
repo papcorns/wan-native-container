@@ -1,7 +1,7 @@
 # Use a PyTorch base image with CUDA support
 FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 
-ENV APP_HOME /app
+ENV APP_HOME /workdir
 ENV PYTHONUNBUFFERED TRUE
 
 # Set the working directory
