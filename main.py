@@ -31,6 +31,18 @@ def cleanup_directory(directory: str):
 
 @functions_framework.http
 def wan_video_endpoint(request):
+    # Debug: Print directory contents
+    logging.info("Current directory contents:")
+    for item in os.listdir():
+        logging.info(f"- {item}")
+
+    logging.info(f"ComfyUI directory contents:")
+    for item in os.listdir(COMFYUI_DIR):
+        logging.info(f"- {item}")
+
+    logging.info(f"ComfyUI output directory contents:")
+    for item in os.listdir(COMFYUI_OUTPUT_DIR):
+        logging.info(f"- {item}")
     """
     HTTP Cloud Function to trigger image-to-video generation.
     Expects a JSON payload with 'input_image_url'.
