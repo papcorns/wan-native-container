@@ -24,6 +24,7 @@ RUN cat /app/main.py | head -5
 
 # Expose port 8080
 EXPOSE 8080
-
+RUN echo "pwd is $(pwd)"
+RUN echo "ls is: \n$(ls)"
 # Set the entrypoint to run the Functions Framework server
 ENTRYPOINT ["functions-framework", "--target=wan_native_handler", "--source=/app/main.py", "--host=0.0.0.0", "--port=8080"] 
