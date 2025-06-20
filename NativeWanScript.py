@@ -5,6 +5,10 @@ from typing import Sequence, Mapping, Any, Union
 import torch
 import argparse
 
+# The script is now executed from within the ComfyUI directory,
+# so we add the parent directory to sys.path to allow imports from ComfyUI.
+# This makes the script runnable both directly and via main.py.
+sys.path.append(os.getcwd())
 
 def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
     """Returns the value at the given index of a sequence or mapping.
@@ -19,74 +23,36 @@ def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
         index (int): The index of the value to retrieve.
 
     Returns:
-        Any: The value at the given index.
+        Any: The value at thegiven index.
 
     Raises:
         IndexError: If the index is out of bounds for the object and the object is not a mapping.
     """
     try:
         return obj[index]
-    except KeyError:
-        return obj["result"][index]
-
-
-def find_path(name: str, path: str = None) -> str:
-    """
-    Recursively looks at parent folders starting from the given path until it finds the given name.
-    Returns the path as a Path object if found, or None otherwise.
-    """
-    # If no path is given, use the current working directory
-    if path is None:
-        path = os.getcwd()
-
-    # Check if the current directory contains the name
-    if name in os.listdir(path):
-        path_name = os.path.join(path, name)
-        print(f"{name} found: {path_name}")
-        return path_name
-
-    # Get the parent directory
-    parent_directory = os.path.dirname(path)
-
-    # If the parent directory is the same as the current directory, we've reached the root and stop the search
-    if parent_directory == path:
-        return None
-
-    # Recursively call the function with the parent directory
-    return find_path(name, parent_directory)
-
-
-def add_comfyui_directory_to_sys_path() -> None:
-    """
-    Add 'ComfyUI' to the sys.path
-    """
-    comfyui_path = find_path("ComfyUI")
-    if comfyui_path is not None and os.path.isdir(comfyui_path):
-        sys.path.append(comfyui_path)
-        print(f"'{comfyui_path}' added to sys.path")
+    except (KeyError, TypeError):
+        # Handle cases where obj is not a list or is a dict without 'result'
+        if isinstance(obj, dict) and "result" in obj:
+            return obj["result"][index]
+        # If it's a different structure, we might need to adjust, but for now, we return as is
+        # if no specific index access is possible.
+        return obj
 
 
 def add_extra_model_paths() -> None:
     """
     Parse the optional extra_model_paths.yaml file and add the parsed paths to the sys.path.
     """
-    try:
-        from main import load_extra_path_config
-    except ImportError:
-        print(
-            "Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead."
-        )
-        from utils.extra_config import load_extra_path_config
+    # This function is now simplified as we assume the script runs from the correct directory.
+    from main import load_extra_path_config
+    
+    extra_model_paths = os.path.join(os.getcwd(), "extra_model_paths.yaml")
 
-    extra_model_paths = find_path("extra_model_paths.yaml")
-
-    if extra_model_paths is not None:
+    if os.path.exists(extra_model_paths):
         load_extra_path_config(extra_model_paths)
     else:
-        print("Could not find the extra_model_paths config file.")
+        print("Could not find the extra_model_paths.yaml file. Skipping.")
 
-
-add_comfyui_directory_to_sys_path()
 add_extra_model_paths()
 
 
