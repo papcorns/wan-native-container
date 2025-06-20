@@ -13,8 +13,6 @@ COPY comfy-ui-requirements.txt /app/comfy-ui-requirements.txt
 RUN pip install -r requirements.txt
 RUN pip install -r comfy-ui-requirements.txt 
 
-# Copy test.py
-COPY test.py /app/test.py
 
 # Copy the application source code
 COPY main.py /app/main.py
