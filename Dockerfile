@@ -8,20 +8,23 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y git wget curl && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements files
-COPY requirements.txt /app/requirements.txt
-COPY comfy-ui-requirements.txt /app/comfy-ui-requirements.txt
+COPY requirements.txt comfy-ui-requirements.txt ./
 RUN pip install -r requirements.txt
 RUN pip install -r comfy-ui-requirements.txt 
-
-
-# Copy the application source code
-COPY main.py /app/main.py
-COPY NativeWanScript.py /app/NativeWanScript.py
-
 RUN pip install functions-framework
 
-# Expose port 8080
-EXPOSE 8080
+# Copy the application source code
+COPY main.py NativeWanScript.py ./
+
+# Print debug information
+RUN echo docker "----------ls -la CALISIYOR"
+
+# List all files and folders for debugging
+RUN ls -la 
+
+RUN echo docker "----------ls -la /app CALISIYOR"
+
+RUN ls -la /app
 
 # Set the entrypoint to run the Functions Framework server
 CMD exec functions-framework --target=wan_video_endpoint --debug
