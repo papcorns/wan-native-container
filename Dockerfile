@@ -24,4 +24,4 @@ RUN echo "--- Logging main.py contents ---" && cat /app/main.py && echo "--- End
 EXPOSE 8080
 
 # Set the entrypoint to run the Functions Framework server
-ENTRYPOINT functions-framework --target=wan_video_endpoint --port=8080
+CMD exec functions-framework --target=wan_video_endpoint
