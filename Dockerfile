@@ -18,7 +18,7 @@ RUN pip install -r comfy-ui-requirements.txt
 COPY main.py /app/main.py
 COPY NativeWanScript.py /app/NativeWanScript.py
 
-RUN echo "--- Logging main.py contents ---" && cat /app/main.py && echo "--- End of main.py ---"
+RUN pip install functions-framework
 
 # Expose port 8080
 EXPOSE 8080
