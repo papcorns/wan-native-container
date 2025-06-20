@@ -1,7 +1,7 @@
 # Use a PyTorch base image with CUDA support
 FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 
-ENV APP_HOME /workdir
+ENV APP_HOME /
 ENV PYTHONUNBUFFERED TRUE
 
 # Set the working directory
@@ -20,14 +20,9 @@ RUN pip install functions-framework
 COPY main.py NativeWanScript.py ./
 
 # Print debug information
-RUN echo docker "----------ls -la CALISIYOR"
+RUN echo "----------ls -la CALISIYOR"
 
 # List all files and folders for debugging
 RUN ls -la 
-
-RUN echo docker "----------ls -la /app CALISIYOR"
-
-RUN ls -la /app
-
 # Set the entrypoint to run the Functions Framework server
 CMD exec functions-framework --target=wan_video_endpoint --debug
