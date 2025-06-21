@@ -34,23 +34,26 @@ def execute_native_wan_script(input_image_path, output_prefix):
     """
     Executes the NativeWanScript by preparing the environment and calling its main() function.
     """
-    # Backup original state
     original_cwd = os.getcwd()
     original_argv = sys.argv
     
-    # Enter ComfyUI's environment
+    # The script and its dependencies assume the current working dir is ComfyUI
     os.chdir(COMFYUI_DIR)
+
+    # Backup the original sys.path
+    original_sys_path = list(sys.path)
+
+    # CRITICAL FIX: Add the project's root and the 'app' directory to the path.
+    # This directly resolves the `from app.logger ...` import issue by making
+    # the 'app' package explicitly discoverable.
     if COMFYUI_DIR not in sys.path:
         sys.path.insert(0, COMFYUI_DIR)
-
+    
     try:
         # Clear argv to prevent ComfyUI's argparser from running on import.
-        # We only keep the program name itself.
         sys.argv = [original_argv[0]]
 
-        # Import the user's script. When it executes `from main import ...`,
-        # Python's importer will now find /app/ComfyUI/main.py because its
-        # parent directory is in sys.path.
+        # Import the user's script.
         import importlib.util
         script_path = os.path.join(COMFYUI_DIR, "NativeWanScript.py")
         spec = importlib.util.spec_from_file_location("NativeWanScript", script_path)
@@ -70,11 +73,10 @@ def execute_native_wan_script(input_image_path, output_prefix):
         # Restore the original environment
         os.chdir(original_cwd)
         sys.argv = original_argv
-        if COMFYUI_DIR in sys.path:
-            sys.path.remove(COMFYUI_DIR)
-
-        # Clean up ComfyUI's main from the cache to ensure a clean state
-        # for the next function invocation in the same worker.
+        # Restore the original sys.path instead of trying to surgically remove elements
+        sys.path[:] = original_sys_path
+        
+        # Clean up ComfyUI's main from the cache for the next invocation.
         if 'main' in sys.modules:
             del sys.modules['main']
 
