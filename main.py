@@ -60,7 +60,7 @@ def wan_video_endpoint(request):
 
         output_prefix = "generated_video"
         command = [
-            "python", "/app/NativeWanScript.py",
+            "python", "/app/ComfyUI/NativeWanScript.py",
             "--input-image", temp_image_path,
             "--output-prefix", output_prefix
         ]
