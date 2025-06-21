@@ -17,7 +17,7 @@ RUN pip install -r comfy-ui-requirements.txt
 RUN pip install functions-framework
 
 # Copy the application source code
-COPY main.py ./
+COPY app.py ./
 
 # Print debug information
 RUN echo "----------ls -la CALISIYOR"
@@ -25,4 +25,4 @@ RUN echo "----------ls -la CALISIYOR"
 # List all files and folders for debugging
 RUN ls -la 
 # Set the entrypoint to run the Functions Framework server
-CMD exec functions-framework --target=wan_video_endpoint --debug
+CMD exec functions-framework --source=app.py --target=wan_video_endpoint --debug
