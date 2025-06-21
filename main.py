@@ -98,37 +98,56 @@ def wan_video_endpoint(request):
 
 def execute_native_wan_script(input_image_path, output_prefix):
     """
-    Executes the workflow from NativeWanScript by importing it as a module
-    to avoid argument parsing conflicts with ComfyUI's main application.
+    Executes the NativeWanScript by correctly preparing the environment
+    and calling its main() function with arguments, without modifying the script.
     """
-    # Add ComfyUI directory to Python path to allow internal imports
+    # Add ComfyUI directory to Python path for its internal imports
     sys.path.insert(0, COMFYUI_DIR)
     
-    # Change to ComfyUI directory as the script expects to be run from there
+    # The script and its dependencies assume the current working dir is ComfyUI
     original_cwd = os.getcwd()
     os.chdir(COMFYUI_DIR)
     
-    try:
-        # To prevent circular import issues (NativeWanScript imports 'main'),
-        # we temporarily create a placeholder for the 'main' module.
-        original_main_module = sys.modules.get('main', None)
-        sys.modules['main'] = type(sys)('main')
+    # Backup original sys state that we are about to modify
+    original_argv = sys.argv
+    original_main_module = sys.modules.get('main')
 
-        # Dynamically import the volume-mounted script
+    # Remove our own 'main' from modules to allow ComfyUI's main to be loaded
+    if 'main' in sys.modules:
+        del sys.modules['main']
+
+    try:
+        # Step 1: Pre-load ComfyUI's main.py. This is the critical fix.
+        # NativeWanScript will try to `from main import ...`, and this ensures
+        # it finds the right file and the `load_extra_path_config` function.
         import importlib.util
+        comfy_main_path = os.path.join(COMFYUI_DIR, "main.py")
+        main_spec = importlib.util.spec_from_file_location("main", comfy_main_path)
+        comfy_main_module = importlib.util.module_from_spec(main_spec)
+        main_spec.loader.exec_module(comfy_main_module)
+        sys.modules['main'] = comfy_main_module
+
+        # Step 2: Now that the environment is correct, import our target script
         script_path = os.path.join(COMFYUI_DIR, "NativeWanScript.py")
         spec = importlib.util.spec_from_file_location("NativeWanScript", script_path)
         native_wan_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(native_wan_module)
         
-        # Call the refactored, reusable workflow function directly
-        logging.info(f"Triggering run_workflow in {script_path}")
-        native_wan_module.run_workflow(input_image_path, output_prefix)
+        # Step 3: Call the script's original main() function, passing our
+        # arguments by temporarily replacing sys.argv.
+        logging.info("Injecting arguments and calling NativeWanScript.main()")
+        sys.argv = [
+            script_path,
+            "--input-image", input_image_path,
+            "--output-prefix", output_prefix
+        ]
+        native_wan_module.main()
         
     finally:
-        # Restore original state
+        # Step 4: Restore original state to not interfere with other processes
         os.chdir(original_cwd)
-        if original_main_module is not None:
+        sys.argv = original_argv
+        if original_main_module:
             sys.modules['main'] = original_main_module
         elif 'main' in sys.modules:
             del sys.modules['main']
