@@ -6,6 +6,7 @@ import requests
 import glob
 from google.cloud import storage
 import logging
+import sys
 
 # Basic logging configuration
 logging.basicConfig(level=logging.INFO)
@@ -59,28 +60,12 @@ def wan_video_endpoint(request):
         cleanup_directory(COMFYUI_OUTPUT_DIR)
 
         output_prefix = "generated_video"
-        command = [
-            "python", "/app/ComfyUI/NativeWanScript.py",
-            "--input-image", temp_image_path,
-            "--output-prefix", output_prefix
-        ]
-
-        logging.info(f"Running command: {' '.join(command)}")
-        process = subprocess.run(
-            command,
-            cwd=COMFYUI_DIR,
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        logging.info(f"Script stdout: {process.stdout}")
-        if process.stderr:
-            logging.warning(f"Script stderr: {process.stderr}")
+        execute_native_wan_script(temp_image_path, output_prefix)
 
         output_files = glob.glob(os.path.join(COMFYUI_OUTPUT_DIR, f"{output_prefix}_*.webp"))
         if not output_files:
             logging.error("Generation failed. No output file found.")
-            return f"Generation failed. No output file found. stderr: {process.stderr}", 500
+            return f"Generation failed. No output file found.", 500
         
         output_file_path = output_files[0]
         output_filename = os.path.basename(output_file_path)
@@ -110,3 +95,40 @@ def wan_video_endpoint(request):
         if temp_image_path and os.path.exists(temp_image_path):
             os.remove(temp_image_path)
         cleanup_directory(COMFYUI_OUTPUT_DIR)
+
+def execute_native_wan_script(input_image_path, output_prefix):
+    """
+    Executes the workflow from NativeWanScript by importing it as a module
+    to avoid argument parsing conflicts with ComfyUI's main application.
+    """
+    # Add ComfyUI directory to Python path to allow internal imports
+    sys.path.insert(0, COMFYUI_DIR)
+    
+    # Change to ComfyUI directory as the script expects to be run from there
+    original_cwd = os.getcwd()
+    os.chdir(COMFYUI_DIR)
+    
+    try:
+        # To prevent circular import issues (NativeWanScript imports 'main'),
+        # we temporarily create a placeholder for the 'main' module.
+        original_main_module = sys.modules.get('main', None)
+        sys.modules['main'] = type(sys)('main')
+
+        # Dynamically import the volume-mounted script
+        import importlib.util
+        script_path = os.path.join(COMFYUI_DIR, "NativeWanScript.py")
+        spec = importlib.util.spec_from_file_location("NativeWanScript", script_path)
+        native_wan_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(native_wan_module)
+        
+        # Call the refactored, reusable workflow function directly
+        logging.info(f"Triggering run_workflow in {script_path}")
+        native_wan_module.run_workflow(input_image_path, output_prefix)
+        
+    finally:
+        # Restore original state
+        os.chdir(original_cwd)
+        if original_main_module is not None:
+            sys.modules['main'] = original_main_module
+        elif 'main' in sys.modules:
+            del sys.modules['main']
