@@ -117,6 +117,11 @@ def execute_native_wan_script(input_image_path, output_prefix):
         del sys.modules['main']
 
     try:
+        # CRITICAL FIX: Temporarily clear sys.argv before importing anything
+        # from ComfyUI. This prevents ComfyUI's main.py from parsing the
+        # functions-framework arguments at module import time.
+        sys.argv = [original_argv[0]]
+
         # Step 1: Pre-load ComfyUI's main.py. This is the critical fix.
         # NativeWanScript will try to `from main import ...`, and this ensures
         # it finds the right file and the `load_extra_path_config` function.
@@ -149,5 +154,5 @@ def execute_native_wan_script(input_image_path, output_prefix):
         sys.argv = original_argv
         if original_main_module:
             sys.modules['main'] = original_main_module
-        elif 'main' in sys.modules:
-            del sys.modules['main']
+        elif 'main' in sys.modules and sys.modules['main'] is not original_main_module:
+             del sys.modules['main']
