@@ -99,47 +99,39 @@ def wan_video_endpoint(request):
 def execute_native_wan_script(input_image_path, output_prefix):
     """
     Executes the NativeWanScript by correctly preparing the environment
-    and calling its main() function with arguments, without modifying the script.
+    to resolve module name collisions between the Cloud Function and ComfyUI.
     """
-    # Add ComfyUI directory to Python path for its internal imports
-    sys.path.insert(0, COMFYUI_DIR)
-    
-    # The script and its dependencies assume the current working dir is ComfyUI
+    # Backup original state
     original_cwd = os.getcwd()
-    os.chdir(COMFYUI_DIR)
-    
-    # Backup original sys state that we are about to modify
     original_argv = sys.argv
-    original_main_module = sys.modules.get('main')
-
-    # Remove our own 'main' from modules to allow ComfyUI's main to be loaded
+    
+    # Temporarily hide our own 'main' module (the Cloud Function)
+    # to allow ComfyUI's 'main.py' to be imported correctly.
     if 'main' in sys.modules:
-        del sys.modules['main']
+        cloud_function_main_module = sys.modules.pop('main')
+    else:
+        cloud_function_main_module = None
+
+    # Enter ComfyUI's environment
+    os.chdir(COMFYUI_DIR)
+    if COMFYUI_DIR not in sys.path:
+        sys.path.insert(0, COMFYUI_DIR)
 
     try:
-        # CRITICAL FIX: Temporarily clear sys.argv before importing anything
-        # from ComfyUI. This prevents ComfyUI's main.py from parsing the
-        # functions-framework arguments at module import time.
-        sys.argv = [original_argv[0]]
+        # Clear argv to prevent ComfyUI's argparser from running on import
+        sys.argv = ['']
 
-        # Step 1: Pre-load ComfyUI's main.py. This is the critical fix.
-        # NativeWanScript will try to `from main import ...`, and this ensures
-        # it finds the right file and the `load_extra_path_config` function.
+        # Import the user's script. When it executes `from main import ...`,
+        # Python's importer will now find and load /app/ComfyUI/main.py.
         import importlib.util
-        comfy_main_path = os.path.join(COMFYUI_DIR, "main.py")
-        main_spec = importlib.util.spec_from_file_location("main", comfy_main_path)
-        comfy_main_module = importlib.util.module_from_spec(main_spec)
-        main_spec.loader.exec_module(comfy_main_module)
-        sys.modules['main'] = comfy_main_module
-
-        # Step 2: Now that the environment is correct, import our target script
         script_path = os.path.join(COMFYUI_DIR, "NativeWanScript.py")
         spec = importlib.util.spec_from_file_location("NativeWanScript", script_path)
         native_wan_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(native_wan_module)
         
-        # Step 3: Call the script's original main() function, passing our
-        # arguments by temporarily replacing sys.argv.
+        # Now, call the script's original main() function by injecting
+        # our arguments into sys.argv, making the script think it was
+        # called from the command line.
         logging.info("Injecting arguments and calling NativeWanScript.main()")
         sys.argv = [
             script_path,
@@ -147,12 +139,18 @@ def execute_native_wan_script(input_image_path, output_prefix):
             "--output-prefix", output_prefix
         ]
         native_wan_module.main()
-        
+
     finally:
-        # Step 4: Restore original state to not interfere with other processes
+        # Restore the original environment
         os.chdir(original_cwd)
         sys.argv = original_argv
-        if original_main_module:
-            sys.modules['main'] = original_main_module
-        elif 'main' in sys.modules and sys.modules['main'] is not original_main_module:
-             del sys.modules['main']
+        if COMFYUI_DIR in sys.path:
+            sys.path.remove(COMFYUI_DIR)
+
+        # Clean up ComfyUI's main from the cache
+        if 'main' in sys.modules:
+            del sys.modules['main']
+
+        # Restore our main Cloud Function module
+        if cloud_function_main_module:
+            sys.modules['main'] = cloud_function_main_module
